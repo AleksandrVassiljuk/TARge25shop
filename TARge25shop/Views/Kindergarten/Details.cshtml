@@ -1,0 +1,13 @@
+@model TARge25shop.Core.Domain.Kindergarten
+@{ ViewData["Title"] = "Rühma andmed"; }
+<h1>Rühma andmed</h1>
+<dl class="row">
+<dt class="col-sm-3">Id</dt><dd class="col-sm-9">@Model.Id</dd>
+<dt class="col-sm-3">Rühma nimi</dt><dd class="col-sm-9">@Model.GroupName</dd>
+<dt class="col-sm-3">Laste arv</dt><dd class="col-sm-9">@Model.ChildrenCount</dd>
+<dt class="col-sm-3">Lasteaia nimi</dt><dd class="col-sm-9">@Model.KindergartenName</dd>
+<dt class="col-sm-3">Õpetaja nimi</dt><dd class="col-sm-9">@Model.TeacherName</dd>
+<dt class="col-sm-3">Loodud</dt><dd class="col-sm-9">@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
+<dt class="col-sm-3">Muudetud</dt><dd class="col-sm-9">@Model.UpdatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
+</dl>
+<a asp-action="Update" asp-route-id="@Model.Id" class="btn btn-primary">Muuda</a> <a asp-action="Index" class="btn btn-secondary">Tagasi</a>

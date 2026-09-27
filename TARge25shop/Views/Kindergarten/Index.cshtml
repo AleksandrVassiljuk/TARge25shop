@@ -1,0 +1,16 @@
+@model IEnumerable<TARge25shop.Core.Domain.Kindergarten>
+@{ ViewData["Title"] = "Lasteaiarühmad"; }
+<h1>Lasteaiarühmad</h1>
+<p><a asp-action="Create" class="btn btn-primary">Lisa rühm</a></p>
+<table class="table table-striped">
+    <thead><tr><th>Rühm</th><th>Laste arv</th><th>Lasteaed</th><th>Õpetaja</th><th>Lisatud</th><th>Tegevused</th></tr></thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr><td>@item.GroupName</td><td>@item.ChildrenCount</td><td>@item.KindergartenName</td><td>@item.TeacherName</td><td>@item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+        <td><a asp-action="Details" asp-route-id="@item.Id">Vaata</a> |
+            <a asp-action="Update" asp-route-id="@item.Id">Muuda</a> |
+            <a asp-action="Delete" asp-route-id="@item.Id">Kustuta</a></td></tr>
+    }
+    </tbody>
+</table>

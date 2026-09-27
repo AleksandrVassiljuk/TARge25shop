@@ -1,0 +1,8 @@
+@model TARge25shop.Core.Domain.Kindergarten
+@{ ViewData["Title"] = "Kustuta rühm"; }
+<h1>Kustuta rühm</h1>
+<p>Kas soovid kustutada rühma <strong>@Model.GroupName</strong> lasteaias <strong>@Model.KindergartenName</strong>?</p>
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+    @Html.AntiForgeryToken()
+    <button type="submit" class="btn btn-danger">Kustuta</button> <a asp-action="Index" class="btn btn-secondary">Tagasi</a>
+</form>

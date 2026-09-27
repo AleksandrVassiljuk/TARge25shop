@@ -1,0 +1,14 @@
+@model TARge25shop.Models.Kindergarten.KindergartenFormViewModel
+@{ var editing = Model.Id.HasValue; ViewData["Title"] = editing ? "Muuda rühma" : "Lisa rühm"; }
+<h1>@ViewData["Title"]</h1>
+<form asp-action="@(editing ? "Update" : "Create")" asp-route-id="@Model.Id" method="post">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3"><label asp-for="GroupName" class="form-label"></label><input asp-for="GroupName" class="form-control" /><span asp-validation-for="GroupName" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="ChildrenCount" class="form-label"></label><input asp-for="ChildrenCount" class="form-control" /><span asp-validation-for="ChildrenCount" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="KindergartenName" class="form-label"></label><input asp-for="KindergartenName" class="form-control" /><span asp-validation-for="KindergartenName" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="TeacherName" class="form-label"></label><input asp-for="TeacherName" class="form-control" /><span asp-validation-for="TeacherName" class="text-danger"></span></div>
+    <button type="submit" class="btn btn-primary">Salvesta</button> <a asp-action="Index" class="btn btn-secondary">Tagasi</a>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

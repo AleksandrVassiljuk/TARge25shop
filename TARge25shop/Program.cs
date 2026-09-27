@@ -1,0 +1,67 @@
+using TARge25shop.ApplicationServices.Services;
+using TARge25shop.Core.ServiceInterface;
+using TARge25shop.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace TARge25Shop
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+            builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<TARge25ShopContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddScoped<ISpaceshipServices, SpaceshipServices>();
+            builder.Services.AddScoped<IKindergartenServices, KindergartenServices>();
+            builder.Services.AddScoped<IFileServices, FileServices>();
+            
+
+            var app = builder.Build();
+
+            // Configure the HTTP request pipeline.
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.MapStaticAssets();
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}")
+                .WithStaticAssets();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<TARge25ShopContext>();
+                dbContext.Database.EnsureCreated();
+                // EnsureCreated ei lisa uut tabelit juba olemasolevasse andmebaasi.
+                // Loo Kindergarten tabel ka siis, kui vana TARge25ShopDb on juba olemas.
+                dbContext.Database.ExecuteSqlRaw(@"IF OBJECT_ID(N'[dbo].[Kindergartens]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Kindergartens] (
+        [Id] uniqueidentifier NOT NULL PRIMARY KEY,
+        [GroupName] nvarchar(200) NOT NULL,
+        [ChildrenCount] int NOT NULL,
+        [KindergartenName] nvarchar(200) NOT NULL,
+        [TeacherName] nvarchar(200) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL
+    );
+END");
+            }
+
+            app.Run();
+        }
+    }
+}
