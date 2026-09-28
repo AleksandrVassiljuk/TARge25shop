@@ -3,9 +3,10 @@ using TARge25shop.Core.Domain;
 
 namespace TARge25shop.Core.ServiceInterface
 {
-
     public interface IFileServices
     {
         void FilesToApi(SpaceshipDto dto, Spaceship domain);
+
+        Task<FileToApiDto?> RemoveImageFromApi(FileToApiDto dto);
     }
 }

@@ -1,7 +1,5 @@
-﻿using AspNetCoreGeneratedDocument;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TARge25shop.ApplicationServices.Services;
 using TARge25shop.Core.Dto;
 using TARge25shop.Core.ServiceInterface;
 using TARge25shop.Data;
@@ -11,23 +9,23 @@ namespace TARge25shop.Controllers
 {
     public class SpaceshipController : Controller
     {
-        // (teenuse hoidmiseks)
         private readonly ISpaceshipServices _spaceshipServices;
         private readonly TARge25ShopContext _context;
-        // konstruktor (ASP.NET süstib teenuse siitkaudu sisse)
-        public SpaceshipController(ISpaceshipServices spaceshipServices, TARge25ShopContext context)
+        private readonly IFileServices _fileServices;
+
+        public SpaceshipController(
+            ISpaceshipServices spaceshipServices,
+            TARge25ShopContext context,
+            IFileServices fileServices
+        )
         {
             _spaceshipServices = spaceshipServices;
             _context = context;
+            _fileServices = fileServices;
         }
-
-
-
 
         public IActionResult Index()
         {
-            //Kutsume teenuse välja, et saada kõik kosmoselaevad.
-            //Konstruktoris tuleb välja kutsuda DBContext, et saaksime andmed kätte. Seejärel kutsume teenuse välja
             var result = _context.Spaceships
                 .Select(x => new SpaceshipIndexViewModel
                 {
@@ -49,9 +47,10 @@ namespace TARge25shop.Controllers
 
             return View("CreateUpdate", result);
         }
-        [HttpPost]
 
-        public async Task<IActionResult> Create(SpaceshipCreateUpdateViewModel vm)
+        [HttpPost]
+        public async Task<IActionResult> Create(
+            SpaceshipCreateUpdateViewModel vm)
         {
             var dto = new SpaceshipDto
             {
@@ -59,22 +58,18 @@ namespace TARge25shop.Controllers
                 ShipType = vm.ShipType,
                 Crew = vm.Crew,
                 EnginePower = vm.EnginePower,
-                //failide edasiandmine dto-le
                 Files = vm.Files,
+
                 FileToApiDtos = vm.Images
                     .Select(x => new FileToApiDto
                     {
                         Id = x.ImageId,
                         ExistingFilePath = x.FilePath,
                         SpaceshipId = x.SpaceshipId
-                    }).ToArray()
+                    })
+                    .ToArray()
             };
 
-
-
-            //Nüüd kutsume teenuse välja, et luua uus kosmoselaev. See on asünkroonne tegevus ja kasutame await
-
-            
             var result = await _spaceshipServices.Create(dto);
 
             if (result == null)
@@ -84,16 +79,26 @@ namespace TARge25shop.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
         [HttpGet]
         public async Task<IActionResult> Update(Guid id)
         {
-            // OTSIME laeva andmed (asenda .GetAsync vajadusel oma teenuse otsingumeetodi nimega)
             var spaceship = await _spaceshipServices.DetailAsync(id);
 
             if (spaceship == null)
             {
                 return NotFound();
             }
+
+            var images = await _context.FileToApis
+                .Where(x => x.SpaceshipId == id)
+                .Select(x => new ImageViewModel
+                {
+                    FilePath = x.ExistingFilePath,
+                    ImageId = x.Id,
+                    SpaceshipId = x.SpaceshipId
+                })
+                .ToArrayAsync();
 
             var vm = new SpaceshipCreateUpdateViewModel
             {
@@ -104,11 +109,14 @@ namespace TARge25shop.Controllers
                 EnginePower = spaceship.EnginePower
             };
 
+            vm.Images.AddRange(images);
+
             return View("CreateUpdate", vm);
-        
         }
+
         [HttpPost]
-        public async Task<IActionResult> Update(SpaceshipCreateUpdateViewModel vm)
+        public async Task<IActionResult> Update(
+            SpaceshipCreateUpdateViewModel vm)
         {
             var dto = new SpaceshipDto
             {
@@ -116,7 +124,17 @@ namespace TARge25shop.Controllers
                 Name = vm.Name,
                 ShipType = vm.ShipType,
                 Crew = vm.Crew,
-                EnginePower = vm.EnginePower
+                EnginePower = vm.EnginePower,
+                Files = vm.Files,
+
+                FileToApiDtos = vm.Images
+                    .Select(x => new FileToApiDto
+                    {
+                        Id = x.ImageId,
+                        ExistingFilePath = x.FilePath,
+                        SpaceshipId = x.SpaceshipId
+                    })
+                    .ToArray()
             };
 
             var result = await _spaceshipServices.Update(dto);
@@ -128,11 +146,12 @@ namespace TARge25shop.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
         [HttpGet]
         public async Task<IActionResult> Delete(Guid id)
         {
             var spaceship = await _spaceshipServices.DetailAsync(id);
-            
+
             if (spaceship == null)
             {
                 return NotFound();
@@ -143,8 +162,10 @@ namespace TARge25shop.Controllers
                 .Select(y => new ImageViewModel
                 {
                     FilePath = y.ExistingFilePath,
-                    ImageId = y.Id
-                }).ToArrayAsync();
+                    ImageId = y.Id,
+                    SpaceshipId = y.SpaceshipId
+                })
+                .ToArrayAsync();
 
             var vm = new SpaceshipDeleteViewModel();
 
@@ -155,14 +176,15 @@ namespace TARge25shop.Controllers
             vm.EnginePower = spaceship.EnginePower;
             vm.CreatedAt = spaceship.CreatedAt;
             vm.UpdatedAt = spaceship.UpdatedAt;
+
             vm.Image.AddRange(images);
 
             return View(vm);
         }
+
         [HttpPost, ActionName("DeleteConfirmed")]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            // Kutsume teenuse välja, et kosmoselaev andmebaasist kustutada
             var spaceship = await _spaceshipServices.Delete(id);
 
             if (spaceship == null)
@@ -172,6 +194,7 @@ namespace TARge25shop.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
@@ -181,28 +204,45 @@ namespace TARge25shop.Controllers
             {
                 return NotFound();
             }
+
             var images = await _context.FileToApis
                 .Where(x => x.SpaceshipId == id)
                 .Select(y => new ImageViewModel
                 {
                     FilePath = y.ExistingFilePath,
-                    ImageId = y.Id
-                }).ToArrayAsync();
-            // tuleb kasutada AddRange, et saada pildid vm kaasa
-            //see on vaheinstants domaini ja vm vahel
+                    ImageId = y.Id,
+                    SpaceshipId = y.SpaceshipId
+                })
+                .ToArrayAsync();
 
             var vm = new SpaceshipDetailsViewModel();
 
             vm.Id = spaceship.Id;
-                vm.Name = spaceship.Name;
-                vm.ShipType = spaceship.ShipType;
-                vm.Crew = spaceship.Crew;
-                vm.EnginePower = spaceship.EnginePower;
-                vm.CreatedAt = spaceship.CreatedAt;
-                vm.UpdatedAt = spaceship.UpdatedAt;
-                vm.Image.AddRange(images);
+            vm.Name = spaceship.Name;
+            vm.ShipType = spaceship.ShipType;
+            vm.Crew = spaceship.Crew;
+            vm.EnginePower = spaceship.EnginePower;
+            vm.CreatedAt = spaceship.CreatedAt;
+            vm.UpdatedAt = spaceship.UpdatedAt;
+
+            vm.Image.AddRange(images);
 
             return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveImage(ImageViewModel vm)
+        {
+            // Tuleb ühendada DTO ja VM
+            // Ainult Id peab saama edastatud andmebaasi
+            var dto = new FileToApiDto()
+            {
+                Id = vm.ImageId
+            };
+
+            var image = await _fileServices.RemoveImageFromApi(dto);
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

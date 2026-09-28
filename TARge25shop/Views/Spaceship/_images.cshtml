@@ -1,10 +1,15 @@
 ﻿@model TARge25shop.Models.Spaceship.ImageViewModel
 
 @{
-    var photoPaths = "~/multipleFileUpload/" + (Model.FilePath ?? "noimage.jpg");
+    var photoPath = "~/multipleFileUpload/" + (Model.FilePath ?? "noimage.jpg");
 }
 
 <div class="form-group row col-sm-4 offset-2">
     <div>@Model.FilePath</div>
-    <img class="card-image-top" src=" @photoPaths" asp-append-version="true"/>
+
+    <img src="@Url.Content(photoPath)"
+         asp-append-version="true"
+         class="img-fluid"
+         style="max-width: 400px; height: auto;"
+         alt="Spaceship image" />
 </div>
