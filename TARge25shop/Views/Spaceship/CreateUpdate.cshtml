@@ -1,15 +1,24 @@
 ﻿@model TARge25shop.Models.Spaceship.SpaceshipCreateUpdateViewModel
 
+@{
+    ViewData["Title"] = Model.Id.HasValue ? "Update Spaceship" : "Create Spaceship";
+}
+
 @if (Model.Id.HasValue)
 {
-    <h1>Update</h1>
+    <h1>Update Spaceship</h1>
 }
 else
 {
-    <h1>Create</h1>
+    <h1>Create Spaceship</h1>
 }
 
-<form method="post" enctype="multipart/form-data">
+<hr />
+
+<form asp-controller="Spaceship"
+      asp-action="@(Model.Id.HasValue ? "Update" : "Create")"
+      method="post"
+      enctype="multipart/form-data">
 
     <input asp-for="Id" type="hidden" />
     <input asp-for="CreatedAt" type="hidden" />
@@ -17,82 +26,121 @@ else
 
     <div class="form-group row" style="margin-bottom: 10px;">
         <label asp-for="Name" class="col-sm-2 col-form-label"></label>
+
         <div class="col-sm-10">
-            <input asp-for="Name" class="form-control" />
+            <input asp-for="Name"
+                   class="form-control"
+                   placeholder="Enter spaceship name" />
+
+            <span asp-validation-for="Name"
+                  class="text-danger"></span>
         </div>
     </div>
 
     <div class="form-group row" style="margin-bottom: 10px;">
         <label asp-for="ShipType" class="col-sm-2 col-form-label"></label>
+
         <div class="col-sm-10">
-            <input asp-for="ShipType" class="form-control" />
+            <input asp-for="ShipType"
+                   class="form-control"
+                   placeholder="Enter ship type" />
+
+            <span asp-validation-for="ShipType"
+                  class="text-danger"></span>
         </div>
     </div>
 
     <div class="form-group row" style="margin-bottom: 10px;">
         <label asp-for="Crew" class="col-sm-2 col-form-label"></label>
+
         <div class="col-sm-10">
-            <input asp-for="Crew" class="form-control" />
+            <input asp-for="Crew"
+                   class="form-control"
+                   type="number" />
+
+            <span asp-validation-for="Crew"
+                  class="text-danger"></span>
         </div>
     </div>
 
     <div class="form-group row" style="margin-bottom: 10px;">
-        <label asp-for="EnginePower" class="col-sm-2 col-form-label"></label>
+        <label asp-for="EnginePower"
+               class="col-sm-2 col-form-label"></label>
+
         <div class="col-sm-10">
-            <input asp-for="EnginePower" class="form-control" />
+            <input asp-for="EnginePower"
+                   class="form-control"
+                   type="number" />
+
+            <span asp-validation-for="EnginePower"
+                  class="text-danger"></span>
         </div>
     </div>
 
-    <div class="form-group row" style="margin-bottom: 10px;">
-        <label asp-for="Files" class="col-sm-2 col-form-label"></label>
+    <div class="form-group row" style="margin-bottom: 15px;">
+        <label asp-for="Files"
+               class="col-sm-2 col-form-label">
+            Images
+        </label>
 
         <div class="col-sm-10">
-            <div class="custom-file">
-                <input type="file"
-                       asp-for="Files"
-                       multiple
-                       class="form-control" />
-            </div>
+            <input asp-for="Files"
+                   type="file"
+                   multiple
+                   class="form-control" />
         </div>
     </div>
 
-    @foreach (var images in Model.Images)
+    @if (Model.Images != null && Model.Images.Count > 0)
     {
-        <partial name="_Images" model="images" />
+        <h4>Current Images</h4>
 
-        <input asp-action="RemoveImage"
-               asp-controller="Spaceship"
-               asp-route-imageId="@images.ImageId"
-               type="submit"
-               class="btn btn-danger"
-               value="Remove Image" />
+        @foreach (var image in Model.Images)
+        {
+            <div style="margin-bottom: 15px;">
+                <partial name="_Images" model="image" />
+
+                <button type="submit"
+                        asp-controller="Spaceship"
+                        asp-action="RemoveImage"
+                        asp-route-imageId="@image.ImageId"
+                        formnovalidate
+                        class="btn btn-danger">
+                    Remove Image
+                </button>
+            </div>
+        }
     }
 
-    <div style="margin-top: 15px;">
+    <div style="margin-top: 20px;">
 
         @if (Model.Id.HasValue)
         {
-            <input asp-action="Update"
-                   asp-controller="Spaceship"
-                   type="submit"
-                   class="btn btn-success"
-                   value="Update" />
+            <button type="submit"
+                    class="btn btn-success">
+                Update
+            </button>
         }
         else
         {
-            <input asp-action="Create"
-                   asp-controller="Spaceship"
-                   type="submit"
-                   class="btn btn-success"
-                   value="Create" />
+            <button type="submit"
+                    class="btn btn-success">
+                Create
+            </button>
         }
 
-        <a asp-action="Index"
-               asp-controller="Spaceship"
+        <a asp-controller="Spaceship"
+               asp-action="Index"
                class="btn btn-secondary">
             Back to List
         </a>
 
     </div>
-
 </form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

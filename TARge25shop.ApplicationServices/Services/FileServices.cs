@@ -20,6 +20,7 @@ namespace TARge25shop.ApplicationServices.Services
             _context = context;
         }
 
+        // Failide/piltide lisamine
         public void FilesToApi(SpaceshipDto dto, Spaceship domain)
         {
             if (dto.Files != null && dto.Files.Count > 0)
@@ -30,6 +31,7 @@ namespace TARge25shop.ApplicationServices.Services
                     "multipleFileUpload"
                 );
 
+                // Kui kausta pole, loome selle
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
@@ -37,6 +39,7 @@ namespace TARge25shop.ApplicationServices.Services
 
                 foreach (var file in dto.Files)
                 {
+                    // Tekitame failile unikaalse nime
                     string uniqueFileName =
                         Guid.NewGuid().ToString() + "_" + file.FileName;
 
@@ -45,12 +48,14 @@ namespace TARge25shop.ApplicationServices.Services
                         uniqueFileName
                     );
 
+                    // Salvestame faili kausta
                     using (var fileStream =
                            new FileStream(filePath, FileMode.Create))
                     {
                         file.CopyTo(fileStream);
                     }
 
+                    // Salvestame faili info andmebaasi
                     FileToApi path = new FileToApi
                     {
                         Id = Guid.NewGuid(),
@@ -63,20 +68,18 @@ namespace TARge25shop.ApplicationServices.Services
             }
         }
 
+        // Ühe pildi kustutamine
         public async Task<FileToApiDto?> RemoveImageFromApi(
             FileToApiDto dto)
         {
-            // Otsime pildi andmebaasist Id järgi
             var image = await _context.FileToApis
                 .FirstOrDefaultAsync(x => x.Id == dto.Id);
 
-            // Kui pilti ei leitud
             if (image == null)
             {
                 return null;
             }
 
-            // Pildi füüsiline asukoht
             string filePath = Path.Combine(
                 _webHost.ContentRootPath,
                 "wwwroot",
@@ -84,18 +87,61 @@ namespace TARge25shop.ApplicationServices.Services
                 image.ExistingFilePath
             );
 
-            // Kustutame faili kaustast
+            // Kustutame füüsilise faili
             if (File.Exists(filePath))
             {
                 File.Delete(filePath);
             }
 
-            // Kustutame kirje andmebaasist
+            // Kustutame andmebaasist
             _context.FileToApis.Remove(image);
 
             await _context.SaveChangesAsync();
 
-            return null;
+            return new FileToApiDto
+            {
+                Id = image.Id,
+                ExistingFilePath = image.ExistingFilePath,
+                SpaceshipId = image.SpaceshipId
+            };
+        }
+
+        // Mitme pildi kustutamine
+        public async Task<List<FileToApi>> RemoveImagesFromApi(
+            FileToApiDto[] dtos)
+        {
+            var images = new List<FileToApi>();
+
+            foreach (var dto in dtos)
+            {
+                var image = await _context.FileToApis
+                    .FirstOrDefaultAsync(x => x.Id == dto.Id);
+
+                if (image != null)
+                {
+                    string filePath = Path.Combine(
+                        _webHost.ContentRootPath,
+                        "wwwroot",
+                        "multipleFileUpload",
+                        image.ExistingFilePath
+                    );
+
+                    // Kustutame füüsilise faili
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+
+                    // Kustutame andmebaasist
+                    _context.FileToApis.Remove(image);
+
+                    images.Add(image);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return images;
         }
     }
 }
