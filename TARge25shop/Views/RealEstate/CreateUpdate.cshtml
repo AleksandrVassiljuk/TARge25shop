@@ -1,0 +1,114 @@
+﻿@model TARge25shop.Models.RealEstate.RealEstateCreateUpdateViewModel
+
+@{
+    ViewData["Title"] = Model.Id.HasValue
+        ? "Update Real Estate"
+        : "Create Real Estate";
+}
+
+@if (Model.Id.HasValue)
+{
+    <h1>Update Real Estate</h1>
+}
+else
+{
+    <h1>Create Real Estate</h1>
+}
+
+<hr />
+
+<form asp-controller="RealEstate"
+      asp-action="@(Model.Id.HasValue ? "Update" : "Create")"
+      method="post"
+      enctype="multipart/form-data">
+
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="CreatedAt" type="hidden" />
+    <input asp-for="UpdatedAt" type="hidden" />
+
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PropertyType" class="form-label">
+            Property Type
+        </label>
+        <input asp-for="PropertyType" class="form-control" />
+        <span asp-validation-for="PropertyType" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Rooms" class="form-label"></label>
+        <input asp-for="Rooms"
+               type="number"
+               class="form-control" />
+        <span asp-validation-for="Rooms" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Area" class="form-label">
+            Area (m²)
+        </label>
+        <input asp-for="Area"
+               type="number"
+               step="0.01"
+               class="form-control" />
+        <span asp-validation-for="Area" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label">
+            Price (€)
+        </label>
+        <input asp-for="Price"
+               type="number"
+               step="0.01"
+               class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Files" class="form-label">
+            Property Images
+        </label>
+
+        <input asp-for="Files"
+               type="file"
+               multiple
+               accept="image/*"
+               class="form-control" />
+
+        <span asp-validation-for="Files"
+              class="text-danger"></span>
+    </div>
+
+    @if (Model.Id.HasValue)
+    {
+        <button type="submit" class="btn btn-success">
+            Update
+        </button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-success">
+            Create
+        </button>
+    }
+
+    <a asp-controller="RealEstate"
+           asp-action="Index"
+           class="btn btn-secondary">
+        Back to List
+    </a>
+
+</form>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

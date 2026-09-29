@@ -1,51 +1,48 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata.Ecma335;
 using TARge25shop.Core.Domain;
 using TARge25shop.Core.Dto;
 using TARge25shop.Core.ServiceInterface;
 using TARge25shop.Data;
 
-
 namespace TARge25shop.ApplicationServices.Services
 {
     public class SpaceshipServices : ISpaceshipServices
     {
-
         private readonly TARge25ShopContext _context;
         private readonly IFileServices _fileServices;
 
-        public SpaceshipServices(TARge25ShopContext context, IFileServices fileServices)
+        public SpaceshipServices(
+            TARge25ShopContext context,
+            IFileServices fileServices)
         {
             _context = context;
             _fileServices = fileServices;
         }
-    
-        //see meetod on vaja controlleris esile kutsuda
-        //peab lisama interface, et kutsuda see meetod välja
+
+        // CREATE
         public async Task<Spaceship> Create(SpaceshipDto dto)
         {
-            //Siin on vaheinstans dto ja domain vahel, et andmed liiguvad dto-st domain objekt
+            Spaceship spaceship = new();
 
-            Spaceship spaceShip = new();
+            spaceship.Id = Guid.NewGuid();
+            spaceship.Name = dto.Name;
+            spaceship.ShipType = dto.ShipType;
+            spaceship.Crew = dto.Crew;
+            spaceship.EnginePower = dto.EnginePower;
+            spaceship.CreatedAt = DateTime.Now;
+            spaceship.UpdatedAt = DateTime.Now;
 
-            spaceShip.Id = Guid.NewGuid();
-            spaceShip.Name = dto.Name;
-            spaceShip.ShipType = dto.ShipType;
-            spaceShip.Crew = dto.Crew;
-            spaceShip.EnginePower = dto.EnginePower;
-            spaceShip.CreatedAt = DateTime.Now;
-            spaceShip.UpdatedAt = DateTime.Now;
+            // Salvestame lisatud failid/pildid
+            _fileServices.FilesToApi(dto, spaceship);
 
-            //kui uus ankeet on loodud, siis toimub ka faili salvestamine
-            _fileServices.FilesToApi(dto, spaceShip);
+            _context.Spaceships.Add(spaceship);
 
-            //andmete salvestamine andmebaasi
-            _context.Spaceships.Add(spaceShip);
             await _context.SaveChangesAsync();
 
-
-            return spaceShip;
+            return spaceship;
         }
+
+        // UPDATE
         public async Task<Spaceship> Update(SpaceshipDto dto)
         {
             var domain = await _context.Spaceships
@@ -60,13 +57,23 @@ namespace TARge25shop.ApplicationServices.Services
             domain.ShipType = dto.ShipType;
             domain.Crew = dto.Crew;
             domain.EnginePower = dto.EnginePower;
-            domain.UpdatedAt = DateTime.Now;
-        
-        _context.Spaceships.Update(domain);
-        await _context.SaveChangesAsync();
 
-        return domain;
+            // CreatedAt jääb samaks.
+            // Muudame ainult UpdatedAt väärtust.
+            domain.UpdatedAt = DateTime.Now;
+
+            // Kui Update lehel lisati uusi pilte,
+            // salvestame need samuti.
+            _fileServices.FilesToApi(dto, domain);
+
+            _context.Spaceships.Update(domain);
+
+            await _context.SaveChangesAsync();
+
+            return domain;
         }
+
+        // DETAILS
         public async Task<Spaceship> DetailAsync(Guid id)
         {
             var spaceship = await _context.Spaceships
@@ -74,12 +81,38 @@ namespace TARge25shop.ApplicationServices.Services
 
             return spaceship;
         }
+
+        // DELETE
         public async Task<Spaceship> Delete(Guid id)
         {
             var result = await _context.Spaceships
                 .FirstOrDefaultAsync(x => x.Id == id);
 
+            if (result == null)
+            {
+                return null;
+            }
+
+            // Leiame kõik Spaceshipiga seotud pildid
+            var images = await _context.FileToApis
+                .Where(x => x.SpaceshipId == id)
+                .Select(x => new FileToApiDto
+                {
+                    Id = x.Id,
+                    ExistingFilePath = x.ExistingFilePath,
+                    SpaceshipId = x.SpaceshipId
+                })
+                .ToArrayAsync();
+
+            // Kustutame Spaceshipiga seotud pildid
+            if (images.Length > 0)
+            {
+                await _fileServices.RemoveImagesFromApi(images);
+            }
+
+            // Kustutame Spaceshipi
             _context.Spaceships.Remove(result);
+
             await _context.SaveChangesAsync();
 
             return result;

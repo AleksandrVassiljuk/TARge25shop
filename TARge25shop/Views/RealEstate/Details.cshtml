@@ -1,0 +1,71 @@
+﻿@model TARge25shop.Models.RealEstate.RealEstateDetailsViewModel
+
+@{
+    ViewData["Title"] = "Real Estate Details";
+}
+
+<h1>Real Estate Details</h1>
+
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-3">Address</dt>
+    <dd class="col-sm-9">@Model.Address</dd>
+
+    <dt class="col-sm-3">Property Type</dt>
+    <dd class="col-sm-9">@Model.PropertyType</dd>
+
+    <dt class="col-sm-3">Rooms</dt>
+    <dd class="col-sm-9">@Model.Rooms</dd>
+
+    <dt class="col-sm-3">Area</dt>
+    <dd class="col-sm-9">@Model.Area m²</dd>
+
+    <dt class="col-sm-3">Price</dt>
+    <dd class="col-sm-9">@Model.Price €</dd>
+
+    <dt class="col-sm-3">Created At</dt>
+    <dd class="col-sm-9">@Model.CreatedAt</dd>
+
+    <dt class="col-sm-3">Updated At</dt>
+    <dd class="col-sm-9">@Model.UpdatedAt</dd>
+</dl>
+
+<hr />
+
+<h3>Property Images</h3>
+
+@if (Model.Images != null && Model.Images.Count > 0)
+{
+    <div class="row">
+        @foreach (var image in Model.Images)
+        {
+            <div class="col-md-4 mb-3">
+                <img src="~/realEstateImages/@image.FilePath"
+                     asp-append-version="true"
+                     class="img-fluid rounded"
+                     style="max-height: 300px; object-fit: cover;"
+                     alt="Real Estate Image" />
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>No images available.</p>
+}
+
+<hr />
+
+<a asp-controller="RealEstate"
+       asp-action="Update"
+       asp-route-id="@Model.Id"
+       class="btn btn-warning">
+    Update
+</a>
+
+<a asp-controller="RealEstate"
+       asp-action="Index"
+       class="btn btn-secondary">
+    Back to List
+</a>
